@@ -28,7 +28,8 @@ var urls = {
 var SETTINGS = {
     //tvHighlightsUrl: "https://feeds.rasset.ie/sitesearch/newsnowlive/select?q=headline:%22TV%20highlights%22&fq=pillar:entertainment&wt=json&sort=date_modified%20desc",
     tvHighlightsUrl: "https://feeds.rasset.ie/sitesearch/newsnowlive/select?q=url:%22" + urls.highlights + "%22&fq=pillar:entertainment&wt=json&sort=date_modified%20desc&rows=5",
-    soapsUrl: "https://feeds.rasset.ie/sitesearch/newsnowlive/select?q=url:%22" + urls.soaps + "%22&fq=pillar:entertainment&wt=json&sort=date_modified%20desc&rows=5"
+    soapsUrl: "https://feeds.rasset.ie/sitesearch/newsnowlive/select?q=url:%22" + urls.soaps + "%22&fq=pillar:entertainment&wt=json&sort=date_modified%20desc&rows=5",
+    radiHighlights: "https://radio.rte.ie/radio1highlights/wp-json/wp/v2/posts"
 };
 
 var handlers = {
@@ -40,13 +41,27 @@ var handlers = {
     },
     'tv': function () {
         this.attributes.medium = "TV";
-        this.attributes.genre = intent.slots.section.value;
         this.emit(':ask', 'Highlights, Soaps or both?', 'Please say that again?');
     },
     'radio': function () {
         this.attributes.medium = "radio";
-        this.attributes.genre = intent.slots.section.value;
         this.emit(':ask', 'Ok, just say play on any highlight you would like to hear.', 'Please say that again?');
+        try{
+            httpGet(SETTINGS.radiHighlights,(r)=>{
+                //console.log(JSON.parse(r));
+                let result = JSON.parse(r);
+                console.log(result);
+                //this.emit(':ask', 'Allright bud');
+                //this.emit();
+                let text = htmlToText.fromString(result.response.docs[0].content);
+                text = utf8.encode(text);
+                
+                this.response.speak(text);
+                this.emit(':responseReady');
+            })
+        }catch(e){
+            console.log("error" + e)
+        } 
     },
     'giveHighlights': function(){
         if(this.attributes.medium === "TV"){
